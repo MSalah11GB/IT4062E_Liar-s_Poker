@@ -1,33 +1,20 @@
-# Compiler
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -I./src
+CXXFLAGS = -std=c++17 -Wall -Wextra -fPIC -I./src $(shell pkg-config --cflags Qt5Widgets)
+LIBS = $(shell pkg-config --libs Qt5Widgets) -lsqlite3
 
-# Libraries
-LIBS = -lsqlite3
+# All cpp files in src/
+SRC := $(wildcard src/*.cpp)
 
-# Find all .cpp files under src/ recursively
-SRC := $(shell find src -name "*.cpp")
+# Each .cpp becomes a binary with the same name (without .cpp)
+BIN := $(patsubst src/%.cpp, %, $(SRC))
 
-# Generate .o names in build folder
-OBJ := $(patsubst src/%.cpp, build/%.o, $(SRC))
+all: $(BIN)
 
-# Final binary name
-TARGET = app
+# Compile each cpp into its own executable
+%: src/%.cpp
+	$(CXX) $(CXXFLAGS) $< -o $@ $(LIBS)
 
-# Default rule
-all: $(TARGET)
-
-# Link final output
-$(TARGET): $(OBJ)
-	$(CXX) $(OBJ) $(LIBS) -o $(TARGET)
-
-# Compile .cpp → .o (mirrors folders!)
-build/%.o: src/%.cpp
-	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
-
-# Remove build products
 clean:
-	rm -rf build $(TARGET)
+	rm -f $(BIN)
 
 .PHONY: all clean
