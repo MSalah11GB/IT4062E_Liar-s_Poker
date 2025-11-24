@@ -2,7 +2,7 @@
 #include <sqlite3.h>
 #include <string>
 
-int main()
+void createdb()
 {
     sqlite3 *db = nullptr;
     char *err_msg = nullptr;
@@ -14,7 +14,7 @@ int main()
     {
         std::cerr << "Cannot open database: " << sqlite3_errmsg(db) << std::endl;
         sqlite3_close(db);
-        return 1;
+        return;
     }
 
     // SQL schema
@@ -60,11 +60,10 @@ int main()
         std::cerr << "SQL error: " << err_msg << std::endl;
         sqlite3_free(err_msg);
         sqlite3_close(db);
-        return 1;
+        return;
     }
 
     std::cout << "Database and tables created successfully!" << std::endl;
 
     sqlite3_close(db);
-    return 0;
 }
