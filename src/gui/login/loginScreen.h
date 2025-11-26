@@ -3,6 +3,6 @@
 
 #include <QWidget>
 
-QWidget* loginScreen();
+void loginScreen(QWidget *window);
 
 #endif
