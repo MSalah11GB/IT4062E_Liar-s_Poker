@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 #include <QApplication>
 #include "gui/login/loginScreen.h"
-#include "gui/homeScreen/homeScreen.h"
+#include "gui/home/homeScreen.h"
 using namespace std;
 
 const int textSize = 16;

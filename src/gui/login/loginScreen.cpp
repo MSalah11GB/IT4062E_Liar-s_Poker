@@ -1,5 +1,3 @@
-#include "loginScreen.h"
-#include "../homeScreen/homeScreen.h"
 #include <QApplication>
 #include <QWidget>
 #include <QScreen>
@@ -13,10 +11,14 @@
 #include <QStackedWidget>
 #include <iostream>
 #include <string>
+
+#include "loginScreen.h"
+#include "../home/homeScreen.h"
+#include "../../util/clearLayout.h"
 using namespace std;
 
 QWidget *loginWindow;
-QWidget *loginPanel;
+QVBoxLayout *loginLayout;
 QStackedWidget *currentForm;
 QWidget *signInPage;
 QWidget *signUpPage;
@@ -43,7 +45,7 @@ void clearAllInputs(QWidget *parent)
 
 void setUp(bool newModeIsSignIn)
 {
-    QString inactiveStyle = "background-color: #d1cbcb; font-weight: lighter;";
+    QString inactiveStyle = "background-color: #d1cbcb; font-weight: lighter; border: 1px solid gray;";
     if (newModeIsSignIn)
     {
         signInButton->setStyleSheet("");
@@ -68,7 +70,7 @@ void setUp(bool newModeIsSignIn)
     }
     signInMode = newModeIsSignIn;
 }
-void setEvents()
+void setUpLoginEvents()
 {
     QObject::connect(signInButton, &QPushButton::clicked, []()
                      { setUp(true); });
@@ -87,7 +89,7 @@ void setEvents()
             int loginResult = (username == "user" && password == "pass") ? 1 : 0;
             if (loginResult == 1){
                 cout << "Login successful!" << endl;
-                delete loginPanel; // Close login content loginPanel
+                clearLayout(loginWindow);
                 homeScreen(loginWindow);
                 return;
             } else {
@@ -98,6 +100,11 @@ void setEvents()
         {
             cout << "sign up username: " << signUpUsernameTextbox->text().toStdString() << ", password: " << signUpPasswordEdit->text().toStdString() << ", confirm password: " << signUpConfirmPasswordEdit->text().toStdString() << endl;
         } });
+
+    QObject::connect(signInPasswordEdit, &QLineEdit::returnPressed, []()
+                     { submitButton->click(); });
+    QObject::connect(signUpConfirmPasswordEdit, &QLineEdit::returnPressed, []()
+                     { submitButton->click(); });
 }
 void loginScreen(QWidget *window)
 {
@@ -110,13 +117,24 @@ void loginScreen(QWidget *window)
     int screenWidth = screenGeometry.width();
     int screenHeight = screenGeometry.height();
 
+    // login window layout
+    loginLayout = new QVBoxLayout(window);
+    loginLayout->setAlignment(Qt::AlignTop);
+    loginLayout->setAlignment(Qt::AlignHCenter);
+
+    // Game title label
+    int titleLabelHeight = screenHeight * 0.1;
+    QLabel *titleLabel = new QLabel("Liar's Poker");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet("font-size: 32px; font-weight: bold;");
+    titleLabel->setFixedHeight(titleLabelHeight);
+
     // loginPanel
     int loginPanelWidth = screenWidth * 0.7;
     int loginPanelHeight = screenHeight * 0.7;
 
-    loginPanel = new QWidget(window);
+    QWidget *loginPanel = new QWidget();
     loginPanel->setFixedSize(loginPanelWidth, loginPanelHeight);
-    loginPanel->move((screenWidth - loginPanelWidth) / 2, (screenHeight - loginPanelHeight) / 2);
     loginPanel->setStyleSheet("QWidget#loginPanel {background-color: #F5F5F5; border-radius: 0px;}");
     loginPanel->setObjectName("loginPanel");
 
@@ -200,10 +218,20 @@ void loginScreen(QWidget *window)
     // Sign in/up button
     int submitButtonHeight = loginPanelHeight * 0.05;
     int submitButtonWidth = loginPanelWidth * 0.3;
+
     submitButton = new QPushButton("lorem ipsum");
     submitButton->setFixedHeight(submitButtonHeight);
     submitButton->setFixedWidth(submitButtonWidth);
-    submitButton->setStyleSheet("border-radius: 10px; border: 1px solid rgba(0, 0, 0, 0.20); border-style: inset; background-color: #ffffff; font-size: 16px;");
+    submitButton->setStyleSheet(
+        "QPushButton {"
+        "    border-radius: 10px;"
+        "    border: 1px solid rgba(0, 0, 0, 0.20);"
+        "    background-color: #ffffff;"
+        "    font-size: 16px;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #d9d9d9;"
+        "}");
 
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect;
     shadowEffect->setColor(QColor(0, 0, 0, 60));
@@ -217,8 +245,12 @@ void loginScreen(QWidget *window)
     loginPanelLayout->addWidget(submitButton, 0, Qt::AlignHCenter);
     loginPanelLayout->addStretch(); // push everything up
 
+    loginLayout->addWidget(titleLabel);
+    loginLayout->addWidget(loginPanel);
+    window->setLayout(loginLayout);
+
     setUp(true);
-    setEvents();
+    setUpLoginEvents();
 
     return;
 }
