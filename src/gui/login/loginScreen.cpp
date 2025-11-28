@@ -1,4 +1,3 @@
-#include "loginScreen.h"
 #include <QApplication>
 #include <QWidget>
 #include <QScreen>
@@ -12,8 +11,14 @@
 #include <QStackedWidget>
 #include <iostream>
 #include <string>
+
+#include "loginScreen.h"
+#include "../home/homeScreen.h"
+#include "../../util/clearLayout.h"
 using namespace std;
-const int textSize = 16;
+
+QWidget *loginWindow;
+QVBoxLayout *loginLayout;
 QStackedWidget *currentForm;
 QWidget *signInPage;
 QWidget *signUpPage;
@@ -40,7 +45,7 @@ void clearAllInputs(QWidget *parent)
 
 void setUp(bool newModeIsSignIn)
 {
-    QString inactiveStyle = "background-color: #d1cbcb; font-weight: lighter;";
+    QString inactiveStyle = "background-color: #d1cbcb; font-weight: lighter; border: 1px solid gray;";
     if (newModeIsSignIn)
     {
         signInButton->setStyleSheet("");
@@ -65,7 +70,7 @@ void setUp(bool newModeIsSignIn)
     }
     signInMode = newModeIsSignIn;
 }
-void setButtonEvent()
+void setUpLoginEvents()
 {
     QObject::connect(signInButton, &QPushButton::clicked, []()
                      { setUp(true); });
@@ -77,17 +82,34 @@ void setButtonEvent()
         if (signInMode)
         {
             cout << "sign in username: " << signInUsernameTextbox->text().toStdString() << ", password: " << signInPasswordEdit->text().toStdString() << endl;
+            QString username = signInUsernameTextbox->text();
+            QString password = signInPasswordEdit->text();
+
+            // TODO: query db, verify account
+            int loginResult = (username == "user" && password == "pass") ? 1 : 0;
+            if (loginResult == 1){
+                cout << "Login successful!" << endl;
+                clearLayout(loginWindow);
+                homeScreen(loginWindow);
+                return;
+            } else {
+                cout << "Login failed: Invalid username or password." << endl;
+            }
         }
         else
         {
             cout << "sign up username: " << signUpUsernameTextbox->text().toStdString() << ", password: " << signUpPasswordEdit->text().toStdString() << ", confirm password: " << signUpConfirmPasswordEdit->text().toStdString() << endl;
         } });
+
+    QObject::connect(signInPasswordEdit, &QLineEdit::returnPressed, []()
+                     { submitButton->click(); });
+    QObject::connect(signUpConfirmPasswordEdit, &QLineEdit::returnPressed, []()
+                     { submitButton->click(); });
 }
-QWidget *loginScreen()
+void loginScreen(QWidget *window)
 {
-    QWidget *window = new QWidget();
+    loginWindow = window;
     window->setWindowTitle("Login Screen");
-    window->setStyleSheet(QString("QLabel {font-size: %1px;}").arg(textSize));
 
     // Screen size
     QScreen *screen = QApplication::primaryScreen();
@@ -95,25 +117,36 @@ QWidget *loginScreen()
     int screenWidth = screenGeometry.width();
     int screenHeight = screenGeometry.height();
 
-    // Panel
-    int panelWidth = screenWidth * 0.7;
-    int panelHeight = screenHeight * 0.7;
+    // login window layout
+    loginLayout = new QVBoxLayout(window);
+    loginLayout->setAlignment(Qt::AlignTop);
+    loginLayout->setAlignment(Qt::AlignHCenter);
 
-    QWidget *panel = new QWidget(window);
-    panel->setFixedSize(panelWidth, panelHeight);
-    panel->move((screenWidth - panelWidth) / 2, (screenHeight - panelHeight) / 2);
-    panel->setStyleSheet("QWidget#panel {background-color: #F5F5F5; border-radius: 0px;}");
-    panel->setObjectName("panel");
+    // Game title label
+    int titleLabelHeight = screenHeight * 0.1;
+    QLabel *titleLabel = new QLabel("Liar's Poker");
+    titleLabel->setAlignment(Qt::AlignCenter);
+    titleLabel->setStyleSheet("font-size: 32px; font-weight: bold;");
+    titleLabel->setFixedHeight(titleLabelHeight);
 
-    // Main layout for panel
-    QVBoxLayout *panelLayout = new QVBoxLayout(panel);
-    panelLayout->setContentsMargins(0, 0, 0, 0);
+    // loginPanel
+    int loginPanelWidth = screenWidth * 0.7;
+    int loginPanelHeight = screenHeight * 0.7;
+
+    QWidget *loginPanel = new QWidget();
+    loginPanel->setFixedSize(loginPanelWidth, loginPanelHeight);
+    loginPanel->setStyleSheet("QWidget#loginPanel {background-color: #F5F5F5; border-radius: 0px;}");
+    loginPanel->setObjectName("loginPanel");
+
+    // Main layout for loginPanel
+    QVBoxLayout *loginPanelLayout = new QVBoxLayout(loginPanel);
+    loginPanelLayout->setContentsMargins(0, 0, 0, 0);
 
     // Top mode layout
     QWidget *modeWidget = new QWidget();
     modeWidget->setStyleSheet("background-color: #F5F5F5; border-radius: 0px;");
     QHBoxLayout *modeLayout = new QHBoxLayout();
-    int modeButtonHeight = panelHeight * 0.1;
+    int modeButtonHeight = loginPanelHeight * 0.1;
     signInButton = new QPushButton("Sign In");
     signInButton->setFixedHeight(modeButtonHeight);
 
@@ -125,7 +158,7 @@ QWidget *loginScreen()
     modeWidget->setLayout(modeLayout);
 
     // Form layout
-    int labelHeight = panelHeight * 0.8 * 0.1;
+    int labelHeight = loginPanelHeight * 0.8 * 0.1;
     // Sign in layout
     signInLayout = new QVBoxLayout();
     signInLayout->setAlignment(Qt::AlignTop);
@@ -175,7 +208,7 @@ QWidget *loginScreen()
     signUpPage->setLayout(signUpLayout);
 
     // Set up current form
-    int formHeight = panelHeight * 0.8;
+    int formHeight = loginPanelHeight * 0.8;
     currentForm = new QStackedWidget();
     currentForm->setFixedHeight(formHeight);
     currentForm->addWidget(signInPage);
@@ -183,12 +216,22 @@ QWidget *loginScreen()
     currentForm->setContentsMargins(0, 0, 0, 0);
 
     // Sign in/up button
-    int submitButtonHeight = panelHeight * 0.05;
-    int submitButtonWidth = panelWidth * 0.3;
+    int submitButtonHeight = loginPanelHeight * 0.05;
+    int submitButtonWidth = loginPanelWidth * 0.3;
+
     submitButton = new QPushButton("lorem ipsum");
     submitButton->setFixedHeight(submitButtonHeight);
     submitButton->setFixedWidth(submitButtonWidth);
-    submitButton->setStyleSheet("border-radius: 10px; border: 1px solid rgba(0, 0, 0, 0.20); border-style: inset; background-color: #ffffff; font-size: 16px;");
+    submitButton->setStyleSheet(
+        "QPushButton {"
+        "    border-radius: 10px;"
+        "    border: 1px solid rgba(0, 0, 0, 0.20);"
+        "    background-color: #ffffff;"
+        "    font-size: 16px;"
+        "}"
+        "QPushButton:pressed {"
+        "    background-color: #d9d9d9;"
+        "}");
 
     QGraphicsDropShadowEffect *shadowEffect = new QGraphicsDropShadowEffect;
     shadowEffect->setColor(QColor(0, 0, 0, 60));
@@ -196,14 +239,18 @@ QWidget *loginScreen()
     shadowEffect->setBlurRadius(7);
 
     submitButton->setGraphicsEffect(shadowEffect);
-    // Add to panel layout
-    panelLayout->addWidget(modeWidget);
-    panelLayout->addWidget(currentForm);
-    panelLayout->addWidget(submitButton, 0, Qt::AlignHCenter);
-    panelLayout->addStretch(); // push everything up
+    // Add to loginPanel layout
+    loginPanelLayout->addWidget(modeWidget);
+    loginPanelLayout->addWidget(currentForm);
+    loginPanelLayout->addWidget(submitButton, 0, Qt::AlignHCenter);
+    loginPanelLayout->addStretch(); // push everything up
+
+    loginLayout->addWidget(titleLabel);
+    loginLayout->addWidget(loginPanel);
+    window->setLayout(loginLayout);
 
     setUp(true);
-    setButtonEvent();
+    setUpLoginEvents();
 
-    return window;
+    return;
 }
