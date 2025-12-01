@@ -460,34 +460,33 @@ static void *game_thread(void *arg) {
         free(showdown_msg);
 
         // Roulette resolution: simple deterministic random per bullet probability
-        // Using same param as earlier: BULLET_HIT_PROB = 0.12
-        for (int i=0;i<ncont;i++){
+        for (int i = 0; i < ncont; i++) {
             int pid = contenders[i];
             if (scores[pid] == worst_score) {
-                int bullets = players[pid].reached_risk;
-                double per = 0.12;
-                double survive = pow(1.0 - per, bullets);
+
+                int risk = players[pid].reached_risk;
+                if (risk < 0) risk = 0;
+                if (risk > 8) risk = 8;   // just in case, clamp
+
+                double elimination_chance = (double)risk / 8.0;
                 double r = (double)rand() / RAND_MAX;
-                int eliminated = (r > survive) ? 1 : 0;
+                int eliminated = (r < elimination_chance) ? 1 : 0;
+
+                cJSON *obj = cJSON_CreateObject();
+                cJSON_AddStringToObject(obj, "player", players[pid].name);
+
                 if (eliminated) {
                     players[pid].eliminated = 1;
-                    // inform
-                    cJSON *obj = cJSON_CreateObject();
-                    cJSON_AddStringToObject(obj, "player", players[pid].name);
                     cJSON_AddBoolToObject(obj, "survived", 0);
                     cJSON_AddStringToObject(obj, "reason", "bullet_hit");
-                    char *rr = json_build_object("GAME_RISK_RESOLVE", obj);
-                    broadcast(rr);
-                    free(rr);
                 } else {
-                    cJSON *obj = cJSON_CreateObject();
-                    cJSON_AddStringToObject(obj, "player", players[pid].name);
                     cJSON_AddBoolToObject(obj, "survived", 1);
                     cJSON_AddStringToObject(obj, "reason", "safe");
-                    char *rr = json_build_object("GAME_RISK_RESOLVE", obj);
-                    broadcast(rr);
-                    free(rr);
                 }
+
+                char *rr = json_build_object("GAME_RISK_RESOLVE", obj);
+                broadcast(rr);
+                free(rr);
             }
         }
 
