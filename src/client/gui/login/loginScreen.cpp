@@ -15,6 +15,7 @@
 #include "loginScreen.h"
 #include "../home/homeScreen.h"
 #include "../../util/clearLayout.h"
+#include "../../../server/db/queries/user.h"
 using namespace std;
 
 QWidget *loginWindow;
@@ -98,6 +99,9 @@ void setUpLoginEvents()
         }
         else
         {
+            string username = signUpUsernameTextbox->text().toStdString();
+            string password = signUpPasswordEdit->text().toStdString();
+            insertUser(username, password);
             cout << "sign up username: " << signUpUsernameTextbox->text().toStdString() << ", password: " << signUpPasswordEdit->text().toStdString() << ", confirm password: " << signUpConfirmPasswordEdit->text().toStdString() << endl;
         } });
 

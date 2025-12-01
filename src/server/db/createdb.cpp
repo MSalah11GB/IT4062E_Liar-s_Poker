@@ -2,17 +2,19 @@
 #include <sqlite3.h>
 #include <string>
 
+sqlite3 *db;
+
 void createdb()
 {
-    sqlite3 *db = nullptr;
+    db = nullptr;
     char *err_msg = nullptr;
 
     // Open database (creates file if it doesn't exist)
-    int rc = sqlite3_open("mydb.db", &db);
+    int rc = sqlite3_open("appdb.db", &db);
 
     if (rc != SQLITE_OK)
     {
-        std::cerr << "Cannot open database: " << sqlite3_errmsg(db) << std::endl;
+        std::cout << "Error connecting to database" << std::endl;
         sqlite3_close(db);
         return;
     }
@@ -32,18 +34,21 @@ void createdb()
         " start_time DATETIME NOT NULL,"
         " end_time DATETIME NOT NULL,"
         " winner_id INTEGER NOT NULL,"
-        " FOREIGN KEY (winner_id) REFERENCES users(id),"
+        " rounds INTEGER NOT NULL,"
         " CHECK (end_time >= start_time)"
         ");"
 
-        "CREATE TABLE IF NOT EXISTS rounds ("
-        " id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        " game_id INTEGER NOT NULL,"
-        " number INTEGER NOT NULL,"
-        " FOREIGN KEY (game_id) REFERENCES games(id)"
+        "CREATE TABLE IF NOT EXISTS friends ("
+        " user1_id INTEGER,"
+        " user2_id INTEGER,"
+        " invite_id INTEGER NOT NULL UNIQUE,"
+        " status TEXT NOT NULL,"
+        " PRIMARY KEY (user1_id, user2_id),"
+        " FOREIGN KEY (user1_id) REFERENCES users(id),"
+        " FOREIGN KEY (user2_id) REFERENCES users(id)"
         ");"
 
-        "CREATE TABLE IF NOT EXISTS user_game ("
+        "CREATE TABLE IF NOT EXISTS users_games ("
         " user_id INTEGER NOT NULL,"
         " game_id INTEGER NOT NULL,"
         " elimated_round INTEGER NOT NULL,"
@@ -62,8 +67,7 @@ void createdb()
         sqlite3_close(db);
         return;
     }
-
+    std::cout << "new" << std::endl;
     std::cout << "Database and tables created successfully!" << std::endl;
-
-    sqlite3_close(db);
+    std::cout << "After connecting, connection state now is: " << (db == nullptr) << std::endl;
 }

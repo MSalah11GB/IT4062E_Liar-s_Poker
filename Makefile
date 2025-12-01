@@ -1,30 +1,52 @@
 CXX = g++
-CXXFLAGS = -std=c++17 -Wall -Wextra -fPIC -I./src $(shell pkg-config --cflags Qt5Widgets)
+CXXFLAGS = -std=c++17 -Wall -Wextra -fPIC \
+           -I./src $(shell pkg-config --cflags Qt5Widgets)
 LIBS = $(shell pkg-config --libs Qt5Widgets) -lsqlite3
 
-# Find all .cpp files under src/
-SRC := $(shell find src -name "*.cpp")
+# --- Source files ------------------------------------------------------------- 
+SRC_CLIENT := $(shell find src/client src/shared -type f -name "*.cpp") \
+              src/server/db/queries/user.cpp # TODO: decompose server from client functionality
+SRC_SERVER := $(shell find src/server src/shared -type f -name "*.cpp")
 
-# OBJECT files (mirrored folder structure under build/)
-OBJ := $(patsubst src/%.cpp, build/%.o, $(SRC))
+# --- Qt Resources -------------------------------------------------------------
+RES_QRC = src/shared/resources/resources.qrc
+RES_CPP = build/shared/resources/resources_qrc.cpp
 
-# Binaries = only top-level .cpp in src/
-TOPLEVEL_SRC := $(wildcard src/*.cpp)
-BIN := $(patsubst src/%.cpp, %, $(TOPLEVEL_SRC))
+# Add resources to client sources
+SRC_CLIENT += $(RES_CPP)
 
-# Default target
-all: $(BIN)
+# --- Object files -------------------------------------------------------------
+# Mirror source folder structure in build/
+OBJ_CLIENT := $(patsubst src/%.cpp, build/%.o, $(SRC_CLIENT))
+OBJ_CLIENT := $(patsubst build/%.cpp, build/%.o, $(OBJ_CLIENT))
+OBJ_SERVER := $(patsubst src/%.cpp, build/%.o, $(SRC_SERVER))
 
-# Rule to build exe for each toplevel .cpp
-%: build/%.o $(OBJ)
-	$(CXX) $(CXXFLAGS) -o $@ build/$*.o $(filter-out build/$*.o,$(OBJ)) $(LIBS)
+# --- Targets -----------------------------------------------------------------
+all: client server
 
-# Rule to build all object files
+client: $(OBJ_CLIENT)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_CLIENT) $(LIBS)
+
+server: $(OBJ_SERVER)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_SERVER) -lsqlite3
+
+# --- Build rules -------------------------------------------------------------
+# Rule to compile any .cpp in src/ to build/ folder
 build/%.o: src/%.cpp
-	@mkdir -p $(dir $@)
+	mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# Rule to compile Qt resource-generated .cpp
+build/%.o: build/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+# Rule to generate Qt resource .cpp from .qrc
+$(RES_CPP): $(RES_QRC)
+	mkdir -p $(dir $@)
+	rcc -o $@ $<
+
+# Clean build artifacts
 clean:
-	rm -rf build $(BIN)
+	rm -rf build client server
 
 .PHONY: all clean
