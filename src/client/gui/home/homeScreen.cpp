@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include <QScrollArea>
+#include <QScrollBar>
 #include <QThread>
 #include "homeScreen.h"
 
@@ -86,13 +87,14 @@ void homeScreen(QWidget *window, User user)
     window->setWindowTitle("Home Screen");
 
     // Screen size
-    int screenWidth = window->width();
-    int screenHeight = window->height();
+    int screenWidth = window->geometry().width();
+    int screenHeight = window->geometry().height();
 
     // 1. Create layout and add widgets
     homeLayout = new QVBoxLayout();
     homeLayout->setAlignment(Qt::AlignTop);
     homeLayout->setContentsMargins(0, 0, 0, 0);
+    homeLayout->setSpacing(0);
 
     // 1.1. Creater header widget, layout
     int topHeight = 60;
@@ -140,8 +142,11 @@ void homeScreen(QWidget *window, User user)
 
     // 1.2. Create body widget, layout
     QWidget *bodyWidget = new QWidget();
-    QHBoxLayout *bodyLayout = new QHBoxLayout(bodyWidget);
+    bodyWidget->setFixedSize(screenWidth, screenHeight - topHeight);
+    QHBoxLayout *bodyLayout = new QHBoxLayout();
     bodyLayout->setContentsMargins(0, 0, 0, 0);
+    bodyLayout->setSpacing(0);
+    bodyWidget->setLayout(bodyLayout);
 
     homeLayout->addWidget(bodyWidget);
 
@@ -155,6 +160,8 @@ void homeScreen(QWidget *window, User user)
     int friendColumnWidth = screenWidth * 0.15;
 
     QWidget *friendDisplay = new QWidget();
+    // friendDisplay->setFixedHeight(screenWidth - topHeight);
+    friendDisplay->setStyleSheet("border: 1px solid blue;");
     friendDisplayLayout = new QVBoxLayout(friendDisplay);
     friendDisplayLayout->setAlignment(Qt::AlignTop);
     friendDisplayLayout->setContentsMargins(0, 0, 0, 0);
@@ -234,14 +241,21 @@ void homeScreen(QWidget *window, User user)
     scrollArea->setFixedWidth(friendColumnWidth);
     scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setStyleSheet("border: 2px solid red;");
     scrollArea->setWidget(friendDisplay);
-
     bodyLayout->addWidget(scrollArea);
+
+    int friendRequestWidgetHeight = 50;
+    int friendRequestWidgetWidth = friendColumnWidth - scrollArea->verticalScrollBar()->sizeHint().width();
+    QWidget *friendRequestWidget = new QWidget(bodyWidget);
+    friendRequestWidget->setStyleSheet("background-color: green; border: 1px solid black;");
+    friendRequestWidget->setFixedSize(friendRequestWidgetWidth, friendRequestWidgetHeight);
+    friendRequestWidget->move(bodyWidget->width() - friendColumnWidth, bodyWidget->height() - friendRequestWidgetHeight);
+    friendRequestWidget->raise();
+    friendRequestWidget->show();
 
     homeWindow->setLayout(homeLayout);
 
     setUpHomeEvents();
     cout << "Entered home screen" << endl;
-    changeFriendStatus(7, 1);
-    changeFriendStatus(3, 0);
 };

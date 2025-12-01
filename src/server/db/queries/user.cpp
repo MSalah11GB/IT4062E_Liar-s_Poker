@@ -76,13 +76,13 @@ vector<User> getFriendsOfUser(int id)
     const char *sql = R"(SELECT id, username, online_status from users where id in (
                           SELECT user2_id
                              FROM friends
-                      WHERE user1_id = ?
+                      WHERE user1_id = ? AND status = 'ACC'
 
                       UNION
 
                       SELECT user1_id
                       FROM friends
-                      WHERE user2_id = ?)
+                      WHERE user2_id = ? AND status = 'ACC')
                       ORDER BY username ASC;)";
 
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
