@@ -63,7 +63,7 @@ void homeScreen(QWidget *window, User user)
     homeLayout->setContentsMargins(0, 0, 0, 0);
 
     // 1.1. Creater header widget, layout
-    int topHeight = 50;
+    int topHeight = 60;
     QHBoxLayout *topLayout = new QHBoxLayout();
     topLayout->setContentsMargins(0, 0, 0, 0);
     topLayout->addStretch();
@@ -80,16 +80,8 @@ void homeScreen(QWidget *window, User user)
     accountLabel = new QPushButton();
     accountLabel->setFixedSize(accountLabelWidth, topHeight);
     accountLabel->setStyleSheet(elementStyle);
-
-    QPixmap pix(":images/user_icon.png");
-    QPixmap scaledPix = pix.scaled(
-        accountLabel->size(),    // scale to label size
-        Qt::IgnoreAspectRatio,   // scale exactly (may stretch)
-        Qt::SmoothTransformation // smooth scaling
-    );
-    QIcon icon(scaledPix);
-    accountLabel->setIcon(icon);
-    accountLabel->setIconSize(scaledPix.size());
+    accountLabel->setIcon(QIcon(":images/user_icon.png"));
+    accountLabel->setIconSize(accountLabel->size());
     topLayout->addWidget(accountLabel);
 
     // 1.1.1.1. Create setting box when click user icon
@@ -137,15 +129,69 @@ void homeScreen(QWidget *window, User user)
     friendDisplayLayout->setSpacing(0);
 
     vector<User> friends = getFriendsOfUser(user.id);
-    for (int i = 0; i < 30; i++)
+    int friendNum = friends.size();
+    int numOfFriendDisplay = 18;
+    for (int i = 0; i < friendNum; i++)
     {
         // TODO: replace label with friend display widget
-        QLabel *label = new QLabel("Item " + QString::number(i));
-        label->setStyleSheet("background-color: purple; border: 1px solid black;");
-        label->setFixedHeight(screenHeight * 0.05);
-        label->setMargin(0);
-        label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-        friendDisplayLayout->addWidget(label);
+        QWidget *friendWidget = new QWidget();
+        friendWidget->setProperty("id", friends[i].id);
+        friendWidget->setFixedHeight(screenHeight / numOfFriendDisplay);
+        friendWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        friendWidget->setStyleSheet("background-color: purple; border: 1px solid black;");
+
+        QHBoxLayout *friendWidgetLayout = new QHBoxLayout();
+        friendWidgetLayout->setContentsMargins(0, 0, 0, 0);
+        friendWidgetLayout->setAlignment(Qt::AlignLeft);
+        friendWidgetLayout->setSpacing(0);
+        friendWidget->setLayout(friendWidgetLayout);
+
+        QWidget *friendIconWidget = new QWidget();
+        friendIconWidget->setFixedSize(screenHeight / numOfFriendDisplay - 2, screenHeight / numOfFriendDisplay - 2);
+        friendIconWidget->setStyleSheet(
+            "QWidget { "
+            "border-image: url(:/images/user_icon.png) 0 0 0 0 stretch stretch;"
+            "}");
+        friendWidgetLayout->addWidget(friendIconWidget);
+
+        QWidget *friendInfoWidget = new QWidget();
+        friendInfoWidget->setFixedHeight(screenHeight / numOfFriendDisplay - 2);
+        friendInfoWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        friendInfoWidget->setStyleSheet("background-color: yellow; border: none");
+
+        QVBoxLayout *friendInfoWidgetLayout = new QVBoxLayout();
+        friendInfoWidgetLayout->setContentsMargins(10, 0, 0, 0);
+        friendInfoWidgetLayout->setSpacing(0);
+        friendInfoWidget->setLayout(friendInfoWidgetLayout);
+
+        QString friendUsername = QString::fromStdString(friends[i].username);
+        QLabel *friendUsernameLabel = new QLabel(friendUsername);
+        friendInfoWidgetLayout->addWidget(friendUsernameLabel);
+
+        QString friendStatus = friends[i].online_status == 1 ? "Online" : "Offline";
+        QLabel *friendStatuslabel = new QLabel(friendStatus);
+        friendStatuslabel->setStyleSheet("font-size: 12px");
+        friendInfoWidgetLayout->addWidget(friendStatuslabel);
+
+        friendWidgetLayout->addWidget(friendInfoWidget);
+
+        QPushButton *friendInviteBtn = new QPushButton();
+        friendInviteBtn->setFixedSize(screenHeight / numOfFriendDisplay - 2, screenHeight / numOfFriendDisplay - 2);
+        friendInviteBtn->setStyleSheet("background-color: red; border: 1px solid white;");
+        friendInviteBtn->setProperty("user_id", user.id);
+        friendInviteBtn->setProperty("friend_id", friends[i].id);
+        QObject::connect(friendInviteBtn, &QPushButton::clicked, [friendInviteBtn]()
+                         { cout << "send invite from user id: " << friendInviteBtn->property("user_id").toInt() << " to friend id " << friendInviteBtn->property("friend_id").toInt() << endl; });
+        friendInviteBtn->setEnabled(false);
+        if (friends[i].online_status == 1)
+        {
+            friendInviteBtn->setIcon(QIcon(":images/invite_user_icon.png"));
+            friendInviteBtn->setIconSize(friendInviteBtn->size() * 0.35);
+            friendInviteBtn->setEnabled(true);
+        }
+        friendWidgetLayout->addWidget(friendInviteBtn);
+
+        friendDisplayLayout->addWidget(friendWidget);
     }
 
     QScrollArea *scrollArea = new QScrollArea();

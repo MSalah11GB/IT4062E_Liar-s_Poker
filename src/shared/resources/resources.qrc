@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>images/user_icon.png</file>
+        <file>images/invite_user_icon.png</file>
     </qresource>
 </RCC>
