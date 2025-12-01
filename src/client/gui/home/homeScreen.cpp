@@ -97,7 +97,6 @@ void homeScreen(QWidget *window)
     settingWidget = new QWidget(nullptr, Qt::Popup);
     settingWidget->setStyleSheet("background-color: #f5f5f5; border: 1px solid rgba(83, 83, 83, 1); border-radius: 0px; font-weight: bold;");
     settingWidget->move(window->width() - settingWidgetWidth - accountLabelWidth, topWidget->height() + 40);
-    cout << topWidget->height() << endl;
     settingWidget->hide();
 
     // Create setting box layout

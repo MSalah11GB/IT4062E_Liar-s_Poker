@@ -5,7 +5,8 @@ LIBS = $(shell pkg-config --libs Qt5Widgets) -lsqlite3
 
 # --- Source files ------------------------------------------------------------- 
 SRC_CLIENT := $(shell find src/client src/shared -type f -name "*.cpp") \
-              src/server/db/queries/user.cpp # TODO: decompose server from client functionality
+              src/server/db/queries/user.cpp\
+			  src/server/db/model/user.cpp  # TODO: decompose server from client functionality
 SRC_SERVER := $(shell find src/server src/shared -type f -name "*.cpp")
 
 # --- Qt Resources -------------------------------------------------------------

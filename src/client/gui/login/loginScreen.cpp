@@ -16,6 +16,7 @@
 #include "../home/homeScreen.h"
 #include "../../util/clearLayout.h"
 #include "../../../server/db/queries/user.h"
+#include "../../../server/db/model/user.h"
 using namespace std;
 
 QWidget *loginWindow;
@@ -87,13 +88,15 @@ void setUpLoginEvents()
             string password = signInPasswordEdit->text().toStdString();
 
             // TODO: query db, verify account
-            int loginResult = verifyUser(username, password);
-            if (loginResult == 1){
+            int id = verifyUser(username, password);
+            if (id > 0){
                 cout << "Login successful!" << endl;
                 clearLayout(loginWindow);
+                User user(id, username);
+                cout << "Create user object with id " << user.id << " and username " << user.username << endl;
                 homeScreen(loginWindow);
                 return;
-            } else if (loginResult == 0) {
+            } else if (id == 0) {
                 cout << "Login failed: Invalid username or password." << endl;
             }
             else {

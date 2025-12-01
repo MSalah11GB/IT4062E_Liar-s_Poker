@@ -49,8 +49,10 @@ int verifyUser(string username, string password)
     if (rc == SQLITE_ROW)
     {
         cout << "User exists!" << endl;
+        int id = sqlite3_column_int(stmt, 0);
+        cout << "User id is: " << id << endl;
         sqlite3_finalize(stmt);
-        return 1;
+        return id;
     }
     else if (rc == SQLITE_DONE)
     {

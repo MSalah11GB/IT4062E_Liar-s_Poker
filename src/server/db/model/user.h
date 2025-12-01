@@ -1,9 +1,16 @@
-#ifndef USER_H
-#define USER_H
+#ifndef USER_MODEL_H
+#define USER_MODEL_H
 
-#include <sqlite3.h>
 #include <string>
+using namespace std;
 
-void insertUser(string username, string password);
+class User
+{
+public:
+    int id;
+    string username;
+
+    User(int id, string username);
+};
 
 #endif

@@ -1,8 +1,9 @@
 #include <string>
+#include "user.h"
 using namespace std;
-class user
+
+User::User(int id, string username)
 {
-public:
-    int id;
-    string username;
-};
+    this->id = id;
+    this->username = username;
+}

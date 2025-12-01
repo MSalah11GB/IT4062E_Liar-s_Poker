@@ -1,5 +1,5 @@
-#ifndef USER_H
-#define USER_H
+#ifndef USER_QUERIES_H
+#define USER_QUERIES_H
 
 #include <cstdio>
 #include <sqlite3.h>
