@@ -4,6 +4,7 @@
 #include <string>
 #include "../createdb.h"
 #include "user.h"
+#include "../model/user.h"
 using namespace std;
 
 void insertUser(string username, string password, string confirmPassword)
@@ -66,4 +67,59 @@ int verifyUser(string username, string password)
         sqlite3_finalize(stmt);
         return -1;
     }
+}
+
+vector<User> getFriendsOfUser(int id)
+{
+    vector<User> friends = {};
+    sqlite3_stmt *stmt;
+    const char *sql = R"(SELECT id, username from users where id in (
+                          SELECT user2_id
+                             FROM friends
+                      WHERE user1_id = ?
+
+                      UNION
+
+                      SELECT user1_id
+                      FROM friends
+                      WHERE user2_id = ?)
+                      ORDER BY username ASC;)";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        cout << "Prepare failed: " << sqlite3_errmsg(db) << endl;
+        // TODO: implement throw Error
+        return friends;
+    }
+    sqlite3_bind_int(stmt, 1, id);
+    sqlite3_bind_int(stmt, 2, id);
+    while (true)
+    {
+        int rc = sqlite3_step(stmt);
+
+        if (rc == SQLITE_ROW)
+        {
+            int id = sqlite3_column_int(stmt, 0);
+            string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
+            User userFriend(id, username);
+            friends.push_back(userFriend);
+        }
+        else if (rc == SQLITE_DONE)
+        {
+            break;
+        }
+        else
+        {
+            cout << "Error retrieving user friends: " << sqlite3_errmsg(db) << endl;
+            break;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    cout << "User has friends: " << endl;
+    for (int i = 0; i < friends.size(); i++)
+    {
+        cout << "Id: " << friends[i].id << ", name: " << friends[i].username << endl;
+    }
+    return friends;
 }

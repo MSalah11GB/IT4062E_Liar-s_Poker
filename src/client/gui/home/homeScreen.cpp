@@ -14,6 +14,8 @@
 
 #include "../login/loginScreen.h"
 #include "../../util/clearLayout.h"
+#include "../../../server/db/model/user.h"
+#include "../../../server/db/queries/user.h"
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -44,9 +46,9 @@ void setUpHomeEvents()
                     return; });
 }
 
-void homeScreen(QWidget *window)
+void homeScreen(QWidget *window, User user)
 {
-
+    cout << "User in home screen " << user.id << ", " << user.username << endl;
     QString elementStyle = "background-color: #f5f5f5; border: none;";
     homeWindow = window;
     window->setWindowTitle("Home Screen");
@@ -134,6 +136,7 @@ void homeScreen(QWidget *window)
     friendDisplayLayout->setContentsMargins(0, 0, 0, 0);
     friendDisplayLayout->setSpacing(0);
 
+    vector<User> friends = getFriendsOfUser(user.id);
     for (int i = 0; i < 30; i++)
     {
         // TODO: replace label with friend display widget

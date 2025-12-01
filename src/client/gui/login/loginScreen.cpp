@@ -94,7 +94,7 @@ void setUpLoginEvents()
                 clearLayout(loginWindow);
                 User user(id, username);
                 cout << "Create user object with id " << user.id << " and username " << user.username << endl;
-                homeScreen(loginWindow);
+                homeScreen(loginWindow, user);
                 return;
             } else if (id == 0) {
                 cout << "Login failed: Invalid username or password." << endl;
