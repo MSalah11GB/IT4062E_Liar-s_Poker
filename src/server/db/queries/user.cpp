@@ -99,10 +99,10 @@ vector<User> getFriendsOfUser(int id)
 
         if (rc == SQLITE_ROW)
         {
-            int id = sqlite3_column_int(stmt, 0);
+            int friend_id = sqlite3_column_int(stmt, 0);
             string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
             int online_status = sqlite3_column_int(stmt, 2);
-            User userFriend(id, username, online_status);
+            User userFriend(friend_id, username, online_status);
             friends.push_back(userFriend);
         }
         else if (rc == SQLITE_DONE)
@@ -123,4 +123,58 @@ vector<User> getFriendsOfUser(int id)
         cout << "Id: " << friends[i].id << ", name: " << friends[i].username << ", online status: " << friends[i].online_status << endl;
     }
     return friends;
+}
+
+vector<User> getFriendRequestsOfUser(int id)
+{
+    vector<User> friendRequests = {};
+    sqlite3_stmt *stmt;
+    const char *sql = R"(
+    SELECT id, username, online_status 
+    FROM users 
+    WHERE id IN (
+        SELECT invite_id 
+        FROM friends 
+        WHERE invite_id != ?
+          AND (user1_id = ? OR user2_id = ?)
+          AND status = 'PEND'
+    ) ORDER BY username ASC;)";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        cout << "Prepare failed: " << sqlite3_errmsg(db) << endl;
+        // TODO: implement throw error
+        return friendRequests;
+    }
+    sqlite3_bind_int(stmt, 1, id);
+    sqlite3_bind_int(stmt, 2, id);
+    sqlite3_bind_int(stmt, 3, id);
+    while (true)
+    {
+        int rc = sqlite3_step(stmt);
+        if (rc == SQLITE_ROW)
+        {
+            int friend_id = sqlite3_column_int(stmt, 0);
+            string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
+            int online_status = sqlite3_column_int(stmt, 2);
+            User userFriend(friend_id, username, online_status);
+            friendRequests.push_back(userFriend);
+        }
+        else if (rc == SQLITE_DONE)
+        {
+            break;
+        }
+        else
+        {
+            cout << "Error retrieving user friend request: " << sqlite3_errmsg(db) << endl;
+            break;
+        }
+    }
+    sqlite3_finalize(stmt);
+    cout << "User has friends invites: " << endl;
+    for (int i = 0; i < friendRequests.size(); i++)
+    {
+        cout << "Id: " << friendRequests[i].id << ", name: " << friendRequests[i].username << ", online status: " << friendRequests[i].online_status << endl;
+    }
+    return friendRequests;
 }
