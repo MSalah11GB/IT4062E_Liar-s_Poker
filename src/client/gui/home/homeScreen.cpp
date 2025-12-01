@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QMouseEvent>
 #include <QScrollArea>
+#include <QThread>
 #include "homeScreen.h"
 
 #include "../login/loginScreen.h"
@@ -25,7 +26,38 @@ QVBoxLayout *homeLayout;
 QPushButton *accountLabel;
 QPushButton *logOutBtn;
 QWidget *settingWidget;
+QVBoxLayout *friendDisplayLayout;
 
+void changeFriendStatus(int friendId, int online_status)
+{
+    int friendNum = friendDisplayLayout->count();
+    QWidget *friendWidget = nullptr;
+    for (int i = 0; i < friendNum; i++)
+    {
+        friendWidget = friendDisplayLayout->itemAt(i)->widget();
+        if (friendWidget->property("friend_id").toInt() == friendId)
+        {
+            break;
+        }
+    }
+    QLabel *friendStatusLabel = qobject_cast<QLabel *>(friendWidget->property("friend_status_label").value<QObject *>());
+    QPushButton *friendInviteBtn =
+        qobject_cast<QPushButton *>(friendWidget->property("friend_invite_btn").value<QObject *>());
+
+    if (online_status == 1)
+    {
+        friendStatusLabel->setText("Online");
+        friendInviteBtn->setIcon(QIcon(":images/invite_user_icon.png"));
+        friendInviteBtn->setIconSize(friendInviteBtn->size() * 0.35);
+        friendInviteBtn->setEnabled(true);
+    }
+    else if (online_status == 0)
+    {
+        friendStatusLabel->setText("Offline");
+        friendInviteBtn->setIcon(QIcon());
+        friendInviteBtn->setEnabled(false);
+    }
+}
 void setUpHomeEvents()
 {
     QObject::connect(accountLabel, &QPushButton::clicked, []()
@@ -123,7 +155,7 @@ void homeScreen(QWidget *window, User user)
     int friendColumnWidth = screenWidth * 0.15;
 
     QWidget *friendDisplay = new QWidget();
-    QVBoxLayout *friendDisplayLayout = new QVBoxLayout(friendDisplay);
+    friendDisplayLayout = new QVBoxLayout(friendDisplay);
     friendDisplayLayout->setAlignment(Qt::AlignTop);
     friendDisplayLayout->setContentsMargins(0, 0, 0, 0);
     friendDisplayLayout->setSpacing(0);
@@ -135,7 +167,7 @@ void homeScreen(QWidget *window, User user)
     {
         // TODO: replace label with friend display widget
         QWidget *friendWidget = new QWidget();
-        friendWidget->setProperty("id", friends[i].id);
+        friendWidget->setProperty("friend_id", friends[i].id);
         friendWidget->setFixedHeight(screenHeight / numOfFriendDisplay);
         friendWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
         friendWidget->setStyleSheet("background-color: purple; border: 1px solid black;");
@@ -169,9 +201,10 @@ void homeScreen(QWidget *window, User user)
         friendInfoWidgetLayout->addWidget(friendUsernameLabel);
 
         QString friendStatus = friends[i].online_status == 1 ? "Online" : "Offline";
-        QLabel *friendStatuslabel = new QLabel(friendStatus);
-        friendStatuslabel->setStyleSheet("font-size: 12px");
-        friendInfoWidgetLayout->addWidget(friendStatuslabel);
+        QLabel *friendStatusLabel = new QLabel(friendStatus);
+        friendStatusLabel->setStyleSheet("font-size: 12px");
+        friendInfoWidgetLayout->addWidget(friendStatusLabel);
+        friendWidget->setProperty("friend_status_label", QVariant::fromValue(static_cast<QObject *>(friendStatusLabel)));
 
         friendWidgetLayout->addWidget(friendInfoWidget);
 
@@ -189,6 +222,8 @@ void homeScreen(QWidget *window, User user)
             friendInviteBtn->setIconSize(friendInviteBtn->size() * 0.35);
             friendInviteBtn->setEnabled(true);
         }
+        friendWidget->setProperty("friend_invite_btn", QVariant::fromValue(static_cast<QObject *>(friendInviteBtn)));
+
         friendWidgetLayout->addWidget(friendInviteBtn);
 
         friendDisplayLayout->addWidget(friendWidget);
@@ -207,4 +242,6 @@ void homeScreen(QWidget *window, User user)
 
     setUpHomeEvents();
     cout << "Entered home screen" << endl;
+    changeFriendStatus(7, 1);
+    changeFriendStatus(3, 0);
 };
