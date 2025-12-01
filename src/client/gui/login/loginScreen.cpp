@@ -83,25 +83,29 @@ void setUpLoginEvents()
         if (signInMode)
         {
             cout << "sign in username: " << signInUsernameTextbox->text().toStdString() << ", password: " << signInPasswordEdit->text().toStdString() << endl;
-            QString username = signInUsernameTextbox->text();
-            QString password = signInPasswordEdit->text();
+            string username = signInUsernameTextbox->text().toStdString();
+            string password = signInPasswordEdit->text().toStdString();
 
             // TODO: query db, verify account
-            int loginResult = (username == "user" && password == "pass") ? 1 : 0;
+            int loginResult = verifyUser(username, password);
             if (loginResult == 1){
                 cout << "Login successful!" << endl;
                 clearLayout(loginWindow);
                 homeScreen(loginWindow);
                 return;
-            } else {
+            } else if (loginResult == 0) {
                 cout << "Login failed: Invalid username or password." << endl;
+            }
+            else {
+                cout << "Login failed: Error" << endl;
             }
         }
         else
         {
             string username = signUpUsernameTextbox->text().toStdString();
             string password = signUpPasswordEdit->text().toStdString();
-            insertUser(username, password);
+            string confirmPassword = signUpConfirmPasswordEdit->text().toStdString();
+            insertUser(username, password, confirmPassword);
             cout << "sign up username: " << signUpUsernameTextbox->text().toStdString() << ", password: " << signUpPasswordEdit->text().toStdString() << ", confirm password: " << signUpConfirmPasswordEdit->text().toStdString() << endl;
         } });
 

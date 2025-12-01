@@ -26,6 +26,7 @@ void createdb()
         " id INTEGER PRIMARY KEY AUTOINCREMENT,"
         " username TEXT NOT NULL UNIQUE,"
         " password TEXT NOT NULL,"
+        " online_status INTEGER NOT NULL,"
         " created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
         ");"
 

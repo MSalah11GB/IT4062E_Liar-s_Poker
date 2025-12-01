@@ -9,10 +9,10 @@
 #include <QPainter>
 #include <QTimer>
 #include <QMouseEvent>
+#include <QScrollArea>
 #include "homeScreen.h"
 
 #include "../login/loginScreen.h"
-// #include "../../../shared/resources.cpp"
 #include "../../util/clearLayout.h"
 
 #include <bits/stdc++.h>
@@ -23,7 +23,6 @@ QVBoxLayout *homeLayout;
 QPushButton *accountLabel;
 QPushButton *logOutBtn;
 QWidget *settingWidget;
-QWidget *overlay;
 
 void setUpHomeEvents()
 {
@@ -53,22 +52,29 @@ void homeScreen(QWidget *window)
     window->setWindowTitle("Home Screen");
 
     // Screen size
-    QScreen *screen = QApplication::primaryScreen();
-    QRect screenGeometry = screen->geometry();
-    int screenWidth = screenGeometry.width();
-    int screenHeight = screenGeometry.height();
+    int screenWidth = window->width();
+    int screenHeight = window->height();
 
-    // Create layout and add widgets
+    // 1. Create layout and add widgets
     homeLayout = new QVBoxLayout();
     homeLayout->setAlignment(Qt::AlignTop);
+    homeLayout->setContentsMargins(0, 0, 0, 0);
 
-    // Creater header layout and overlay
+    // 1.1. Creater header widget, layout
     int topHeight = 50;
     QHBoxLayout *topLayout = new QHBoxLayout();
+    topLayout->setContentsMargins(0, 0, 0, 0);
     topLayout->addStretch();
 
-    // Create user icon
-    int accountLabelWidth = 50;
+    QWidget *topWidget = new QWidget();
+    topWidget->setStyleSheet("background-color: grey; border: 1px solid blue;");
+    topWidget->setFixedSize(screenWidth, topHeight);
+    topWidget->setLayout(topLayout);
+
+    homeLayout->addWidget(topWidget);
+
+    // 1.1.1. Create user icon
+    int accountLabelWidth = 60;
     accountLabel = new QPushButton();
     accountLabel->setFixedSize(accountLabelWidth, topHeight);
     accountLabel->setStyleSheet(elementStyle);
@@ -84,43 +90,72 @@ void homeScreen(QWidget *window)
     accountLabel->setIconSize(scaledPix.size());
     topLayout->addWidget(accountLabel);
 
-    // Create overlay for setting box
-    overlay = new QWidget(window);
-    overlay->setAttribute(Qt::WA_NoSystemBackground);
-    overlay->setAttribute(Qt::WA_TranslucentBackground);
-    overlay->setStyleSheet("background: transparent;");
-    overlay->setStyleSheet(elementStyle);
-    overlay->setGeometry(0, 0, window->width(), window->height());
-    overlay->raise(); // always on top
-    overlay->show();
-
-    // Create setting box when click user icon
-    int settingWidgetWidth = 120;
+    // 1.1.1.1. Create setting box when click user icon
+    int settingWidgetWidth = screenWidth * 0.1;
     int settingWidgetOptionHeight = 30;
 
-    settingWidget = new QWidget(overlay);
+    settingWidget = new QWidget(nullptr, Qt::Popup);
     settingWidget->setStyleSheet("background-color: #f5f5f5; border: 1px solid rgba(83, 83, 83, 1); border-radius: 0px; font-weight: bold;");
-    settingWidget->move(window->width() - settingWidgetWidth - accountLabelWidth, accountLabel->height() + 20);
+    settingWidget->move(window->width() - settingWidgetWidth - accountLabelWidth, topWidget->height() + 40);
+    cout << topWidget->height() << endl;
     settingWidget->hide();
-
-    // Log out setting option
-    logOutBtn = new QPushButton("Log Out");
-    logOutBtn->setFixedSize(settingWidgetWidth, settingWidgetOptionHeight);
 
     // Create setting box layout
     QVBoxLayout *settingLayout = new QVBoxLayout();
     settingLayout->setAlignment(Qt::AlignTop);
     settingLayout->setContentsMargins(0, 0, 0, 0);
-    settingLayout->addWidget(logOutBtn);
+
     settingWidget->setLayout(settingLayout);
 
-    homeLayout->addLayout(topLayout);
+    // 1.1.1.1.1. Log out setting option
+    logOutBtn = new QPushButton("Log Out");
+    logOutBtn->setFixedSize(settingWidgetWidth, settingWidgetOptionHeight);
+
+    settingLayout->addWidget(logOutBtn);
+
+    // 1.2. Create body widget, layout
+    QWidget *bodyWidget = new QWidget();
+    QHBoxLayout *bodyLayout = new QHBoxLayout(bodyWidget);
+    bodyLayout->setContentsMargins(0, 0, 0, 0);
+
+    homeLayout->addWidget(bodyWidget);
+
+    // 1.2.1 Content display (fills remaining width)
+    QWidget *contentDisplay = new QWidget();
+    contentDisplay->setStyleSheet("background-color: #90EE90; border: 1px solid purple;");
+    contentDisplay->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    bodyLayout->addWidget(contentDisplay);
+
+    // 1.2.2. Friend display (fixed width, vertical scroll)
+    int friendColumnWidth = screenWidth * 0.15;
+
+    QWidget *friendDisplay = new QWidget();
+    QVBoxLayout *friendDisplayLayout = new QVBoxLayout(friendDisplay);
+    friendDisplayLayout->setAlignment(Qt::AlignTop);
+    friendDisplayLayout->setContentsMargins(0, 0, 0, 0);
+    friendDisplayLayout->setSpacing(0);
+
+    for (int i = 0; i < 30; i++)
+    {
+        // TODO: replace label with friend display widget
+        QLabel *label = new QLabel("Item " + QString::number(i));
+        label->setStyleSheet("background-color: purple; border: 1px solid black;");
+        label->setFixedHeight(screenHeight * 0.05);
+        label->setMargin(0);
+        label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        friendDisplayLayout->addWidget(label);
+    }
+
+    QScrollArea *scrollArea = new QScrollArea();
+    scrollArea->setWidgetResizable(true);
+    scrollArea->setFixedWidth(friendColumnWidth);
+    scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    scrollArea->setWidget(friendDisplay);
+
+    bodyLayout->addWidget(scrollArea);
 
     homeWindow->setLayout(homeLayout);
-    QTimer::singleShot(0, [=]()
-                       { settingWidget->move(
-                             window->width() - settingWidgetWidth - accountLabelWidth,
-                             accountLabel->height() + 20); });
 
     setUpHomeEvents();
     cout << "Entered home screen" << endl;
