@@ -73,7 +73,7 @@ vector<User> getFriendsOfUser(int id)
 {
     vector<User> friends = {};
     sqlite3_stmt *stmt;
-    const char *sql = R"(SELECT id, username from users where id in (
+    const char *sql = R"(SELECT id, username, online_status from users where id in (
                           SELECT user2_id
                              FROM friends
                       WHERE user1_id = ?
@@ -101,7 +101,8 @@ vector<User> getFriendsOfUser(int id)
         {
             int id = sqlite3_column_int(stmt, 0);
             string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
-            User userFriend(id, username);
+            int online_status = sqlite3_column_int(stmt, 2);
+            User userFriend(id, username, online_status);
             friends.push_back(userFriend);
         }
         else if (rc == SQLITE_DONE)
@@ -119,7 +120,7 @@ vector<User> getFriendsOfUser(int id)
     cout << "User has friends: " << endl;
     for (int i = 0; i < friends.size(); i++)
     {
-        cout << "Id: " << friends[i].id << ", name: " << friends[i].username << endl;
+        cout << "Id: " << friends[i].id << ", name: " << friends[i].username << ", online status: " << friends[i].online_status << endl;
     }
     return friends;
 }

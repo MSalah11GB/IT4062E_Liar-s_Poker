@@ -9,8 +9,9 @@ class User
 public:
     int id;
     string username;
+    int online_status;
 
-    User(int id, string username);
+    User(int id, string username, int online_status);
 };
 
 #endif

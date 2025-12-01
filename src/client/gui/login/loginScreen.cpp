@@ -92,7 +92,7 @@ void setUpLoginEvents()
             if (id > 0){
                 cout << "Login successful!" << endl;
                 clearLayout(loginWindow);
-                User user(id, username);
+                User user(id, username, 1); 
                 cout << "Create user object with id " << user.id << " and username " << user.username << endl;
                 homeScreen(loginWindow, user);
                 return;
