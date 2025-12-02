@@ -14,7 +14,7 @@
 
 #include "loginScreen.h"
 #include "../home/homeScreen.h"
-#include "../../util/clearLayout.h"
+#include "../../util/deleteWidgetLayout.h"
 #include "../../../server/db/queries/user.h"
 #include "../../../server/db/model/user.h"
 using namespace std;
@@ -91,7 +91,7 @@ void setUpLoginEvents()
             int id = verifyUser(username, password);
             if (id > 0){
                 cout << "Login successful!" << endl;
-                clearLayout(loginWindow);
+                deleteWidgetLayout(loginWindow);
                 User user(id, username, 1); 
                 cout << "Create user object with id " << user.id << " and username " << user.username << endl;
                 homeScreen(loginWindow, user);

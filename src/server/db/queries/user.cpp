@@ -118,14 +118,14 @@ vector<User> getFriendsOfUser(int id)
 
     sqlite3_finalize(stmt);
     cout << "User has friends: " << endl;
-    for (int i = 0; i < friends.size(); i++)
+    for (int i = 0; i < static_cast<int>(friends.size()); i++)
     {
         cout << "Id: " << friends[i].id << ", name: " << friends[i].username << ", online status: " << friends[i].online_status << endl;
     }
     return friends;
 }
 
-vector<User> getFriendRequestsOfUser(int id)
+vector<User> getFriendRequestsOfUser(int userId)
 {
     vector<User> friendRequests = {};
     sqlite3_stmt *stmt;
@@ -146,9 +146,9 @@ vector<User> getFriendRequestsOfUser(int id)
         // TODO: implement throw error
         return friendRequests;
     }
-    sqlite3_bind_int(stmt, 1, id);
-    sqlite3_bind_int(stmt, 2, id);
-    sqlite3_bind_int(stmt, 3, id);
+    sqlite3_bind_int(stmt, 1, userId);
+    sqlite3_bind_int(stmt, 2, userId);
+    sqlite3_bind_int(stmt, 3, userId);
     while (true)
     {
         int rc = sqlite3_step(stmt);
@@ -172,7 +172,7 @@ vector<User> getFriendRequestsOfUser(int id)
     }
     sqlite3_finalize(stmt);
     cout << "User has friends invites: " << endl;
-    for (int i = 0; i < friendRequests.size(); i++)
+    for (int i = 0; i < static_cast<int>(friendRequests.size()); i++)
     {
         cout << "Id: " << friendRequests[i].id << ", name: " << friendRequests[i].username << ", online status: " << friendRequests[i].online_status << endl;
     }

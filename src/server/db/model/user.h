@@ -11,6 +11,7 @@ public:
     string username;
     int online_status;
 
+    User();
     User(int id, string username, int online_status);
 };
 

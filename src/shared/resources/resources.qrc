@@ -2,5 +2,7 @@
     <qresource prefix="/">
         <file>images/user_icon.png</file>
         <file>images/invite_user_icon.png</file>
+        <file>images/left_arrowhead.png</file>
+        <file>images/right_arrowhead.png</file>
     </qresource>
 </RCC>

@@ -15,9 +15,11 @@
 #include "homeScreen.h"
 
 #include "../login/loginScreen.h"
+#include "../../util/deleteWidgetLayout.h"
 #include "../../util/clearLayout.h"
 #include "../../../server/db/model/user.h"
 #include "../../../server/db/queries/user.h"
+#include "../../../server/db/queries/friends.h"
 
 #include <bits/stdc++.h>
 using namespace std;
@@ -30,6 +32,12 @@ QWidget *settingWidget;
 QWidget *bodyWidget;
 QScrollArea *scrollArea;
 QVBoxLayout *friendDisplayLayout;
+QWidget *friendRequestWidget;
+QPushButton *leftButton;
+QPushButton *friendRequestConfirmationBtn;
+QLabel *friendRequestUsernameLabel;
+QPushButton *rightButton;
+User user;
 vector<User> friends;
 vector<User> friendRequests;
 
@@ -44,10 +52,27 @@ int settingWidgetHeight;
 int settingWidgetOptionHeight;
 int bodyHeight;
 int friendColumnWidth;
+int friendRequestIndex = 0;
 
-void setUpFriendRequestsWidget(int friendNum)
+void setUpFriendRequestsWidgetState()
 {
-    int friendRequestWidgetHeight = 50;
+    int numOfFriendRequests = friendRequests.size();
+    if (numOfFriendRequests == 0)
+    {
+        friendRequestWidget->hide();
+    }
+    else
+    {
+        friendRequestWidget->raise();
+        friendRequestWidget->show();
+        friendRequestUsernameLabel->setText(QString::fromStdString(friendRequests.at(friendRequestIndex).username));
+        friendRequestConfirmationBtn->setProperty("friend_id", friendRequests.at(friendRequestIndex).id);
+    }
+}
+void setUpFriendRequestsWidget()
+{
+    int friendNum = friends.size();
+    int friendRequestWidgetHeight = 100;
     int friendRequestWidgetWidth;
     if (friendNum > numOfFriendDisplay)
     {
@@ -58,15 +83,88 @@ void setUpFriendRequestsWidget(int friendNum)
         friendRequestWidgetWidth = friendColumnWidth;
     }
 
-    QWidget *friendRequestWidget = new QWidget(bodyWidget);
+    friendRequestWidget = new QWidget(bodyWidget);
     friendRequestWidget->setStyleSheet("background-color: green; border: 1px solid black;");
     friendRequestWidget->setFixedSize(friendRequestWidgetWidth, friendRequestWidgetHeight);
     friendRequestWidget->move(bodyWidget->width() - friendColumnWidth, bodyWidget->height() - friendRequestWidgetHeight);
     friendRequestWidget->raise();
     friendRequestWidget->show();
+
+    QHBoxLayout *friendRequestLayout = new QHBoxLayout();
+    friendRequestLayout->setContentsMargins(0, 0, 0, 0);
+    friendRequestLayout->setSpacing(0);
+    friendRequestLayout->setAlignment(Qt::AlignLeft);
+    friendRequestWidget->setLayout(friendRequestLayout);
+
+    leftButton = new QPushButton();
+    leftButton->setStyleSheet("background: none; border: none;");
+    leftButton->setFixedWidth(friendRequestWidgetWidth * 0.1);
+    leftButton->setIcon(QIcon(":images/left_arrowhead.png"));
+    leftButton->setIconSize(leftButton->size() * 0.35);
+    friendRequestLayout->addWidget(leftButton);
+
+    QWidget *friendRequestContentWidget = new QWidget();
+    friendRequestContentWidget->setFixedWidth(friendRequestWidgetWidth * 0.8);
+
+    QVBoxLayout *friendRequestContentLayout = new QVBoxLayout();
+    friendRequestContentLayout->setContentsMargins(0, 0, 0, 0);
+    friendRequestContentLayout->setSpacing(0);
+    friendRequestContentLayout->setAlignment(Qt::AlignTop);
+    friendRequestContentWidget->setLayout(friendRequestContentLayout);
+    friendRequestLayout->addWidget(friendRequestContentWidget);
+
+    QWidget *friendRequestInfoWidget = new QWidget();
+    friendRequestInfoWidget->setFixedHeight(friendRequestWidgetHeight * 0.5);
+
+    QHBoxLayout *friendRequestInfoLayout = new QHBoxLayout();
+    friendRequestInfoLayout->setContentsMargins(0, 0, 0, 0);
+    friendRequestInfoLayout->setSpacing(0);
+    friendRequestInfoLayout->setAlignment(Qt::AlignLeft);
+    friendRequestInfoWidget->setLayout(friendRequestInfoLayout);
+    friendRequestContentLayout->addWidget(friendRequestInfoWidget);
+
+    QWidget *friendRequestIconWidget = new QWidget();
+    friendRequestIconWidget->setFixedSize(friendRequestWidgetHeight * 0.5 - 2, friendRequestWidgetHeight * 0.5 - 2);
+    friendRequestIconWidget->setStyleSheet(
+        "QWidget { "
+        "border-image: url(:/images/user_icon.png) 0 0 0 0 stretch stretch;"
+        "}");
+    friendRequestInfoLayout->addWidget(friendRequestIconWidget);
+
+    QWidget *friendRequestTextWidget = new QWidget();
+    friendRequestTextWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    friendRequestInfoLayout->addWidget(friendRequestTextWidget);
+
+    QVBoxLayout *friendRequestTextLayout = new QVBoxLayout();
+    friendRequestTextLayout->setContentsMargins(0, 0, 0, 0);
+    friendRequestTextLayout->setSpacing(0);
+    friendRequestTextLayout->setAlignment(Qt::AlignTop);
+    friendRequestTextWidget->setLayout(friendRequestTextLayout);
+
+    friendRequestUsernameLabel = new QLabel();
+    friendRequestUsernameLabel->setFixedHeight(friendRequestWidgetHeight * 0.25);
+    friendRequestTextLayout->addWidget(friendRequestUsernameLabel);
+
+    QLabel *friendRequestMsgLabel = new QLabel("want to be friends");
+    friendRequestMsgLabel->setStyleSheet("font-size: 12px;");
+    friendRequestMsgLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    friendRequestTextLayout->addWidget(friendRequestMsgLabel);
+
+    friendRequestConfirmationBtn = new QPushButton("ADD FRIEND");
+    friendRequestConfirmationBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    friendRequestConfirmationBtn->setStyleSheet("background: none; border: none; font-size: 16px;");
+    // friendRequestConfirmationBtn->setProperty("friend_id", friendRequests.at(friendRequestIndex).id);
+    friendRequestContentLayout->addWidget(friendRequestConfirmationBtn);
+
+    rightButton = new QPushButton();
+    rightButton->setStyleSheet("background: none; border: none;");
+    rightButton->setFixedWidth(friendRequestWidgetWidth * 0.1);
+    rightButton->setIcon(QIcon(":images/right_arrowhead.png"));
+    rightButton->setIconSize(rightButton->size() * 0.35);
+    friendRequestLayout->addWidget(rightButton);
 }
 
-QWidget *setUpFriendInviteWidget(int userId, int friendIndex)
+QWidget *setUpFriendInviteWidget(int friendIndex)
 {
     QWidget *friendWidget = new QWidget();
     friendWidget->setProperty("friend_id", friends[friendIndex].id);
@@ -113,10 +211,9 @@ QWidget *setUpFriendInviteWidget(int userId, int friendIndex)
     QPushButton *friendInviteBtn = new QPushButton();
     friendInviteBtn->setFixedSize(bodyHeight / numOfFriendDisplay - 2, bodyHeight / numOfFriendDisplay - 2);
     friendInviteBtn->setStyleSheet("background-color: red; border: 1px solid white;");
-    friendInviteBtn->setProperty("user_id", userId);
     friendInviteBtn->setProperty("friend_id", friends[friendIndex].id);
     QObject::connect(friendInviteBtn, &QPushButton::clicked, [friendInviteBtn]()
-                     { cout << "send invite from user id: " << friendInviteBtn->property("user_id").toInt() << " to friend id " << friendInviteBtn->property("friend_id").toInt() << endl; });
+                     { cout << "send invite from user id: " << user.id << " to friend id " << friendInviteBtn->property("friend_id").toInt() << endl; });
     friendInviteBtn->setEnabled(false);
     if (friends[friendIndex].online_status == 1)
     {
@@ -159,6 +256,16 @@ void changeFriendStatus(int friendId, int online_status)
         friendInviteBtn->setEnabled(false);
     }
 }
+void setUpFriendDisplay()
+{
+    friends = getFriendsOfUser(user.id);
+    int friendNum = friends.size();
+    for (int i = 0; i < friendNum; i++)
+    {
+        QWidget *friendWidget = setUpFriendInviteWidget(i);
+        friendDisplayLayout->addWidget(friendWidget);
+    }
+}
 void setUpHomeEvents()
 {
     QObject::connect(accountLabel, &QPushButton::clicked, []()
@@ -174,13 +281,57 @@ void setUpHomeEvents()
     QObject::connect(logOutBtn, &QPushButton::clicked, []()
                      {
                     cout << "Log out button clicked" << endl;
-                    clearLayout(homeWindow);
+                    deleteWidgetLayout(homeWindow);
                     loginScreen(homeWindow);
                     return; });
+
+    QObject::connect(leftButton, &QPushButton::clicked, []()
+                     { cout << "Left button clicked" << endl;
+                    friendRequestIndex--;
+                    if (friendRequestIndex < 0) friendRequestIndex = static_cast<int>(friendRequests.size()) - 1; 
+                    cout << friendRequestIndex << endl;
+                    setUpFriendRequestsWidgetState(); });
+
+    QObject::connect(rightButton, &QPushButton::clicked, []()
+                     { cout << "Right button clicked" << endl;
+                    friendRequestIndex++;
+                    if (friendRequestIndex == static_cast<int>(friendRequests.size())) friendRequestIndex = 0; 
+                    cout << friendRequestIndex << endl;
+                    setUpFriendRequestsWidgetState(); });
+    QObject::connect(friendRequestConfirmationBtn, &QPushButton::clicked, []()
+                     {
+                         cout << "confirm friend request clicked" << endl;
+                         int userId = user.id;
+                         int friendId = friendRequestConfirmationBtn->property("friend_id").toInt();
+                         confirmFriendRequest(userId, friendId, friendId);
+                         int numOfFriendRequests = friendRequests.size();
+                         for (int i = 0; i < numOfFriendRequests; i++)
+                         {
+                             if (friendRequests.at(i).id == friendId)
+                             {
+                                User newFriend = friendRequests.at(i);
+                                friendRequests.erase(friendRequests.begin() + i); 
+                                if (friendRequestIndex >= static_cast<int>(friendRequests.size())) {
+                                    friendRequestIndex = friendRequests.size() - 1;
+                                }
+                                if (friendRequestIndex < 0)
+                                    friendRequestIndex = 0;
+                                friends.push_back(newFriend); 
+                                sort(friends.begin(), friends.end(), [](User &a,User& b){
+                                    return a.username < b.username;
+                                });                
+                                clearLayout(friendDisplayLayout);
+                                setUpFriendDisplay();
+                                break;
+                             }
+                         }
+
+                         setUpFriendRequestsWidgetState(); });
 }
 
-void homeScreen(QWidget *window, User user)
+void homeScreen(QWidget *window, User _user)
 {
+    user = _user;
     cout << "User in home screen " << user.id << ", " << user.username << endl;
     QString elementStyle = "background-color: #f5f5f5; border: none;";
     homeWindow = window;
@@ -269,12 +420,7 @@ void homeScreen(QWidget *window, User user)
     friendDisplayLayout->setSpacing(0);
 
     friends = getFriendsOfUser(user.id);
-    int friendNum = friends.size();
-    for (int i = 0; i < friendNum; i++)
-    {
-        QWidget *friendWidget = setUpFriendInviteWidget(user.id, i);
-        friendDisplayLayout->addWidget(friendWidget);
-    }
+    setUpFriendDisplay();
 
     scrollArea = new QScrollArea();
     scrollArea->setWidgetResizable(true);
@@ -286,8 +432,8 @@ void homeScreen(QWidget *window, User user)
     bodyLayout->addWidget(scrollArea);
 
     friendRequests = getFriendRequestsOfUser(user.id);
-    setUpFriendRequestsWidget(friendNum);
-
+    setUpFriendRequestsWidget();
+    setUpFriendRequestsWidgetState();
     homeWindow->setLayout(homeLayout);
 
     setUpHomeEvents();

@@ -2,6 +2,9 @@
 #include "user.h"
 using namespace std;
 
+User::User()
+{
+}
 User::User(int id, string username, int online_status)
 {
     this->id = id;

@@ -5,6 +5,6 @@
 #include <QLayout>
 #include <QLayoutItem>
 
-void clearLayout(QWidget *window);
+void clearLayout(QLayout *layout);
 
 #endif

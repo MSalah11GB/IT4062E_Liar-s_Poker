@@ -1,29 +1,28 @@
-#include <QWidget>
 #include <QLayout>
 #include <QLayoutItem>
 #include <QObject>
 #include "clearLayout.h"
 
-void clearLayout(QWidget *window)
+void clearLayout(QLayout *layout)
 {
-    // Remove layout if exists
-    if (window->layout())
-    {
-        QLayoutItem *item;
-        while ((item = window->layout()->takeAt(0)) != nullptr)
-        {
-            if (item->widget())
-                item->widget()->deleteLater();
-            delete item;
-        }
-        delete window->layout();
-    }
+    if (!layout)
+        return;
 
-    // Also remove children NOT in layout
-    for (QObject *child : window->children())
+    while (layout->count() > 0)
     {
-        QWidget *w = qobject_cast<QWidget *>(child);
-        if (w)
-            w->deleteLater();
+        QLayoutItem *item = layout->takeAt(0);
+
+        if (QWidget *widget = item->widget())
+        {
+            widget->hide();        // optional
+            widget->deleteLater(); // safest way to delete widgets
+        }
+
+        if (QLayout *childLayout = item->layout())
+        {
+            clearLayout(childLayout); // recursive delete for nested layouts
+        }
+
+        delete item; // delete QLayoutItem
     }
 }
