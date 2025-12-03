@@ -11,6 +11,7 @@ SRC_CLIENT := $(shell find src/client src/shared -type f -name "*.cpp") \
 SRC_SERVER := $(shell find src/server src/shared -type f -name "*.cpp")
 
 # --- Qt Resources -------------------------------------------------------------
+RES_GEN_CPP = src/generate_resources.cpp
 RES_QRC = src/shared/resources/resources.qrc
 RES_CPP = build/shared/resources/resources_qrc.cpp
 
@@ -24,7 +25,11 @@ OBJ_CLIENT := $(patsubst build/%.cpp, build/%.o, $(OBJ_CLIENT))
 OBJ_SERVER := $(patsubst src/%.cpp, build/%.o, $(SRC_SERVER))
 
 # --- Targets -----------------------------------------------------------------
-all: client server
+all: gen_resource client server
+
+gen_resource: 
+	$(CXX) -std=c++17 -o generate_resources $(RES_GEN_CPP)
+	./generate_resources
 
 client: $(OBJ_CLIENT)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJ_CLIENT) $(LIBS)
@@ -49,6 +54,6 @@ $(RES_CPP): $(RES_QRC)
 
 # Clean build artifacts
 clean:
-	rm -rf build client server
+	rm -rf build client server generate_resources
 
 .PHONY: all clean

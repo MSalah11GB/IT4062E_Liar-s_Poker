@@ -1,8 +1,62 @@
 <RCC>
     <qresource prefix="/">
-        <file>images/user_icon.png</file>
+        <file>images/back_dark.png</file>
+        <file>images/back_light.png</file>
+        <file>images/clubs_10.png</file>
+        <file>images/clubs_2.png</file>
+        <file>images/clubs_3.png</file>
+        <file>images/clubs_4.png</file>
+        <file>images/clubs_5.png</file>
+        <file>images/clubs_6.png</file>
+        <file>images/clubs_7.png</file>
+        <file>images/clubs_8.png</file>
+        <file>images/clubs_9.png</file>
+        <file>images/clubs_A.png</file>
+        <file>images/clubs_J.png</file>
+        <file>images/clubs_K.png</file>
+        <file>images/clubs_Q.png</file>
+        <file>images/diamonds_10.png</file>
+        <file>images/diamonds_2.png</file>
+        <file>images/diamonds_3.png</file>
+        <file>images/diamonds_4.png</file>
+        <file>images/diamonds_5.png</file>
+        <file>images/diamonds_6.png</file>
+        <file>images/diamonds_7.png</file>
+        <file>images/diamonds_8.png</file>
+        <file>images/diamonds_9.png</file>
+        <file>images/diamonds_A.png</file>
+        <file>images/diamonds_J.png</file>
+        <file>images/diamonds_K.png</file>
+        <file>images/diamonds_Q.png</file>
+        <file>images/hearts_10.png</file>
+        <file>images/hearts_2.png</file>
+        <file>images/hearts_3.png</file>
+        <file>images/hearts_4.png</file>
+        <file>images/hearts_5.png</file>
+        <file>images/hearts_6.png</file>
+        <file>images/hearts_7.png</file>
+        <file>images/hearts_8.png</file>
+        <file>images/hearts_9.png</file>
+        <file>images/hearts_A.png</file>
+        <file>images/hearts_J.png</file>
+        <file>images/hearts_K.png</file>
+        <file>images/hearts_Q.png</file>
         <file>images/invite_user_icon.png</file>
         <file>images/left_arrowhead.png</file>
         <file>images/right_arrowhead.png</file>
+        <file>images/spades_10.png</file>
+        <file>images/spades_2.png</file>
+        <file>images/spades_3.png</file>
+        <file>images/spades_4.png</file>
+        <file>images/spades_5.png</file>
+        <file>images/spades_6.png</file>
+        <file>images/spades_7.png</file>
+        <file>images/spades_8.png</file>
+        <file>images/spades_9.png</file>
+        <file>images/spades_A.png</file>
+        <file>images/spades_J.png</file>
+        <file>images/spades_K.png</file>
+        <file>images/spades_Q.png</file>
+        <file>images/user_icon.png</file>
     </qresource>
 </RCC>
