@@ -7,4 +7,6 @@
 using namespace std;
 
 void confirmFriendRequest(int user1_id, int user2_id, int invite_id);
+void removeFriend(int user1_id, int user2_id);
+
 #endif

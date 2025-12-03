@@ -43,6 +43,7 @@ vector<User> friendRequests;
 
 const int numOfFriendDisplay = 18;
 
+int titleBarHeight;
 int screenWidth;
 int screenHeight;
 int topHeight;
@@ -52,6 +53,7 @@ int settingWidgetHeight;
 int settingWidgetOptionHeight;
 int bodyHeight;
 int friendColumnWidth;
+int friendWidgetHeight;
 int friendRequestIndex = 0;
 
 void setUpFriendRequestsWidgetState()
@@ -153,7 +155,6 @@ void setUpFriendRequestsWidget()
     friendRequestConfirmationBtn = new QPushButton("ADD FRIEND");
     friendRequestConfirmationBtn->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     friendRequestConfirmationBtn->setStyleSheet("background: none; border: none; font-size: 16px;");
-    // friendRequestConfirmationBtn->setProperty("friend_id", friendRequests.at(friendRequestIndex).id);
     friendRequestContentLayout->addWidget(friendRequestConfirmationBtn);
 
     rightButton = new QPushButton();
@@ -166,9 +167,10 @@ void setUpFriendRequestsWidget()
 
 QWidget *setUpFriendInviteWidget(int friendIndex)
 {
+    cout << friendWidgetHeight << endl;
     QWidget *friendWidget = new QWidget();
     friendWidget->setProperty("friend_id", friends[friendIndex].id);
-    friendWidget->setFixedHeight(bodyHeight / numOfFriendDisplay);
+    friendWidget->setFixedHeight(friendWidgetHeight);
     friendWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     friendWidget->setStyleSheet("background-color: purple; border: 1px solid black;");
 
@@ -179,7 +181,7 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
     friendWidget->setLayout(friendWidgetLayout);
 
     QWidget *friendIconWidget = new QWidget();
-    friendIconWidget->setFixedSize(bodyHeight / numOfFriendDisplay - 2, bodyHeight / numOfFriendDisplay - 2);
+    friendIconWidget->setFixedSize(friendWidgetHeight - 2, friendWidgetHeight - 2);
     friendIconWidget->setStyleSheet(
         "QWidget { "
         "border-image: url(:/images/user_icon.png) 0 0 0 0 stretch stretch;"
@@ -187,7 +189,7 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
     friendWidgetLayout->addWidget(friendIconWidget);
 
     QWidget *friendInfoWidget = new QWidget();
-    friendInfoWidget->setFixedHeight(bodyHeight / numOfFriendDisplay - 2);
+    friendInfoWidget->setFixedHeight(friendWidgetHeight - 2);
     friendInfoWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
     friendInfoWidget->setStyleSheet("background-color: yellow; border: none");
 
@@ -209,7 +211,7 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
     friendWidgetLayout->addWidget(friendInfoWidget);
 
     QPushButton *friendInviteBtn = new QPushButton();
-    friendInviteBtn->setFixedSize(bodyHeight / numOfFriendDisplay - 2, bodyHeight / numOfFriendDisplay - 2);
+    friendInviteBtn->setFixedSize(friendWidgetHeight - 2, friendWidgetHeight - 2);
     friendInviteBtn->setStyleSheet("background-color: red; border: 1px solid white;");
     friendInviteBtn->setProperty("friend_id", friends[friendIndex].id);
     QObject::connect(friendInviteBtn, &QPushButton::clicked, [friendInviteBtn]()
@@ -224,6 +226,57 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
     friendWidget->setProperty("friend_invite_btn", QVariant::fromValue(static_cast<QObject *>(friendInviteBtn)));
 
     friendWidgetLayout->addWidget(friendInviteBtn);
+
+    friendWidget->setContextMenuPolicy(Qt::CustomContextMenu);
+    QObject::connect(friendWidget, &QWidget::customContextMenuRequested, [friendWidget]()
+                     {
+                        cout << "Right-click at widget with friend id " << friendWidget->property("friend_id").toInt() << endl;
+
+                        QPoint friendWidgetCoord = friendWidget->mapToGlobal(friendWidget->rect().topLeft());
+                        int friendOptionsWidgetWidth = friendWidgetCoord.x();
+                        int friendOptionsWidgetHeight = friendWidgetCoord.y();
+
+                        cout << friendOptionsWidgetWidth << " " << friendOptionsWidgetHeight << endl;
+                        QWidget *friendOptionsWidget = new QWidget(nullptr, Qt::Popup);
+                        friendOptionsWidget->setAttribute(Qt::WA_DeleteOnClose);
+                        friendOptionsWidget->setStyleSheet("background-color: white; border: 1px solid black;");
+                        friendOptionsWidget->setFixedWidth(friendColumnWidth);
+                        cout << friendWidgetHeight << endl;
+                        friendOptionsWidget->move(friendOptionsWidgetWidth - friendColumnWidth - 10, friendOptionsWidgetHeight + friendWidgetHeight * 0.5);
+                        friendOptionsWidget->raise();
+                        friendOptionsWidget->show(); 
+                        
+                        QVBoxLayout *friendOptionsLayout = new QVBoxLayout();
+                        friendOptionsLayout->setContentsMargins(0, 0, 0, 0);
+                        friendOptionsLayout->setSpacing(0);
+                        friendOptionsLayout->setAlignment(Qt::AlignTop);
+                        friendOptionsLayout->setSizeConstraint(QLayout::SetFixedSize); 
+                        friendOptionsWidget->setLayout(friendOptionsLayout);
+
+                        int friendOptionHeight = 30;
+                        QPushButton *removeFriendButton = new QPushButton("Remove Friend");
+                        removeFriendButton->setFixedSize(friendColumnWidth, friendOptionHeight);
+                        removeFriendButton->setStyleSheet("text-align: left; padding-left: 10px;");
+                        QObject::connect(removeFriendButton, &QPushButton::clicked, [friendWidget, friendOptionsWidget]()
+                                        {
+                                            friendOptionsWidget->deleteLater();
+                                            cout << "remove friend id " << friendWidget->property("friend_id").toInt() << " of user id " << user.id << endl;
+                                            removeFriend(user.id, friendWidget->property("friend_id").toInt());
+                                            int friendNum = friends.size();
+                                            for (int i = 0; i < friendNum; i++)
+                                            {
+                                                if (friends.at(i).id == friendWidget->property("friend_id").toInt())
+                                                {
+                                                    friends.erase(friends.begin() + i);
+                                                    QWidget *friendWidgetToErase = friendDisplayLayout->takeAt(i)->widget();
+                                                    if (friendWidgetToErase)
+                                                    {
+                                                        friendWidgetToErase->deleteLater();
+                                                    }
+                                                    break;
+                                                }
+                                            } });
+                        friendOptionsLayout->addWidget(removeFriendButton); });
     return friendWidget;
 }
 void changeFriendStatus(int friendId, int online_status)
@@ -258,7 +311,9 @@ void changeFriendStatus(int friendId, int online_status)
 }
 void setUpFriendDisplay()
 {
+    clearLayout(friendDisplayLayout);
     friends = getFriendsOfUser(user.id);
+    friendWidgetHeight = bodyHeight / numOfFriendDisplay;
     int friendNum = friends.size();
     for (int i = 0; i < friendNum; i++)
     {
@@ -320,7 +375,6 @@ void setUpHomeEvents()
                                 sort(friends.begin(), friends.end(), [](User &a,User& b){
                                     return a.username < b.username;
                                 });                
-                                clearLayout(friendDisplayLayout);
                                 setUpFriendDisplay();
                                 break;
                              }
@@ -340,6 +394,8 @@ void homeScreen(QWidget *window, User _user)
     // Screen size
     screenWidth = window->geometry().width();
     screenHeight = window->geometry().height();
+
+    titleBarHeight = window->frameGeometry().height() - screenHeight;
 
     // 1. Create layout and add widgets
     homeLayout = new QVBoxLayout();
