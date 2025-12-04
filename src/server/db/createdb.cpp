@@ -27,7 +27,10 @@ void createdb()
         " username TEXT NOT NULL UNIQUE,"
         " password TEXT NOT NULL,"
         " online_status INTEGER NOT NULL,"
-        " created_at DATETIME DEFAULT CURRENT_TIMESTAMP"
+        " elo INTEGER NOT NULL,"
+        " created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+        " CHECK (online_status IN (0, 1)),"
+        " CHECK (elo >= 0)"
         ");"
 
         "CREATE TABLE IF NOT EXISTS games ("
@@ -36,7 +39,9 @@ void createdb()
         " end_time DATETIME NOT NULL,"
         " winner_id INTEGER NOT NULL,"
         " rounds INTEGER NOT NULL,"
-        " CHECK (end_time >= start_time)"
+        " CHECK (end_time >= start_time),"
+        " CHECK (rounds >= 1),"
+        " FOREIGN KEY (winner_id) REFERENCES users(id)"
         ");"
 
         "CREATE TABLE IF NOT EXISTS friends ("
@@ -54,11 +59,15 @@ void createdb()
         "CREATE TABLE IF NOT EXISTS users_games ("
         " user_id INTEGER NOT NULL,"
         " game_id INTEGER NOT NULL,"
-        " elimated_round INTEGER NOT NULL,"
+        " eliminated_round INTEGER NOT NULL,"
         " eliminated_order INTEGER NOT NULL,"
+        " point_gain INTEGER NOT NULL,"
         " PRIMARY KEY (user_id, game_id),"
         " FOREIGN KEY (user_id) REFERENCES users(id),"
-        " FOREIGN KEY (game_id) REFERENCES games(id)"
+        " FOREIGN KEY (game_id) REFERENCES games(id),"
+        " CONSTRAINT eliminated_round_value CHECK (eliminated_round >= 0),"
+        " CONSTRAINT order_value CHECK (eliminated_order >= 1 AND eliminated_order <= 4),"
+        " CONSTRAINT order_duplication UNIQUE(game_id, eliminated_order)"
         ");";
 
     rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &err_msg);
