@@ -10,9 +10,10 @@ public:
     int id;
     string username;
     int online_status;
+    int elo;
 
     User();
-    User(int id, string username, int online_status);
+    User(int id, string username, int online_status, int elo);
 };
 
 #endif

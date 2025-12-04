@@ -69,7 +69,7 @@ int verifyUser(string username, string password)
     }
 }
 
-vector<User> getFriendsOfUser(int id)
+vector<User> getFriendsOfUser(int userId)
 {
     vector<User> friends = {};
     sqlite3_stmt *stmt;
@@ -91,8 +91,8 @@ vector<User> getFriendsOfUser(int id)
         // TODO: implement throw Error
         return friends;
     }
-    sqlite3_bind_int(stmt, 1, id);
-    sqlite3_bind_int(stmt, 2, id);
+    sqlite3_bind_int(stmt, 1, userId);
+    sqlite3_bind_int(stmt, 2, userId);
     while (true)
     {
         int rc = sqlite3_step(stmt);
@@ -102,7 +102,8 @@ vector<User> getFriendsOfUser(int id)
             int friend_id = sqlite3_column_int(stmt, 0);
             string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
             int online_status = sqlite3_column_int(stmt, 2);
-            User userFriend(friend_id, username, online_status);
+            int elo = sqlite3_column_int(stmt, 3);
+            User userFriend(friend_id, username, online_status, elo);
             friends.push_back(userFriend);
         }
         else if (rc == SQLITE_DONE)
@@ -157,7 +158,8 @@ vector<User> getFriendRequestsOfUser(int userId)
             int friend_id = sqlite3_column_int(stmt, 0);
             string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
             int online_status = sqlite3_column_int(stmt, 2);
-            User userFriend(friend_id, username, online_status);
+            int elo = sqlite3_column_int(stmt, 3);
+            User userFriend(friend_id, username, online_status, elo);
             friendRequests.push_back(userFriend);
         }
         else if (rc == SQLITE_DONE)
@@ -177,4 +179,46 @@ vector<User> getFriendRequestsOfUser(int userId)
         cout << "Id: " << friendRequests[i].id << ", name: " << friendRequests[i].username << ", online status: " << friendRequests[i].online_status << endl;
     }
     return friendRequests;
+}
+
+User getUser(int userId)
+{
+    sqlite3_stmt *stmt;
+    const char *sql = "SELECT id, username, online_status, elo FROM users WHERE id = ?;";
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        cout << "Prepare failed: " << sqlite3_errmsg(db) << endl;
+        User user;
+        return user;
+    }
+
+    sqlite3_bind_int(stmt, 1, userId);
+
+    int rc = sqlite3_step(stmt);
+
+    if (rc == SQLITE_ROW)
+    {
+        cout << "User exists!" << endl;
+        int id = sqlite3_column_int(stmt, 0);
+        string username(reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1)));
+        int online_status = sqlite3_column_int(stmt, 2);
+        int elo = sqlite3_column_int(stmt, 3);
+        User user(id, username, online_status, elo);
+        return user;
+    }
+    else if (rc == SQLITE_DONE)
+    {
+        cout << "No user found" << endl;
+        sqlite3_finalize(stmt);
+        User user;
+        return user;
+    }
+    else
+    {
+        cout << "Error during step: " << sqlite3_errmsg(db) << endl;
+        sqlite3_finalize(stmt);
+        User user;
+        return user;
+    }
 }

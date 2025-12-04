@@ -27,6 +27,8 @@ using namespace std;
 QWidget *homeWindow;
 QVBoxLayout *homeLayout;
 QPushButton *accountLabel;
+QPushButton *viewCareerBtn;
+QWidget *userCareerWidget = nullptr;
 QPushButton *logOutBtn;
 QWidget *settingWidget;
 QWidget *bodyWidget;
@@ -41,7 +43,7 @@ User user;
 vector<User> friends;
 vector<User> friendRequests;
 
-const int numOfFriendDisplay = 18;
+const int numOfFriendDisplay = 14;
 
 int titleBarHeight;
 int screenWidth;
@@ -56,6 +58,34 @@ int friendColumnWidth;
 int friendWidgetHeight;
 int friendRequestIndex = 0;
 
+QWidget *setUpUserCareerWidget(User user)
+{
+    QWidget *careerWidget = new QWidget();
+    careerWidget->setStyleSheet("border: none;");
+    careerWidget->setFixedSize(screenWidth, screenHeight - topHeight);
+
+    QHBoxLayout *careerLayout = new QHBoxLayout();
+    careerLayout->setContentsMargins(0, 50, 0, 0);
+    careerLayout->setAlignment(Qt::AlignLeft);
+    careerLayout->setAlignment(Qt::AlignTop);
+    careerLayout->setSpacing(0);
+    careerWidget->setLayout(careerLayout);
+
+    QPushButton *returnBtn = new QPushButton("Return");
+    returnBtn->setFixedSize(screenWidth * 0.1, (screenHeight - topHeight) * 0.1);
+    returnBtn->setIcon(QIcon(":images/return_icon.png"));
+    returnBtn->setIconSize(QSize(returnBtn->width() * 0.3, returnBtn->height() * 0.8));
+    QObject::connect(returnBtn, &QPushButton::clicked, [careerWidget]()
+                     {  cout << "return to home screen" << endl;
+                        careerWidget->deleteLater();
+                        bodyWidget->show();
+                        homeLayout->addWidget(bodyWidget);
+                        viewCareerBtn->setEnabled(true); });
+    careerLayout->addWidget(returnBtn);
+
+    QWidget *careerContentWidget = new QWidget();
+    return careerWidget;
+}
 void setUpFriendRequestsWidgetState()
 {
     int numOfFriendRequests = friendRequests.size();
@@ -202,6 +232,11 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
     QLabel *friendUsernameLabel = new QLabel(friendUsername);
     friendInfoWidgetLayout->addWidget(friendUsernameLabel);
 
+    QString friendElo = QString::number(friends[friendIndex].elo) + " points";
+    QLabel *friendEloLabel = new QLabel(friendElo);
+    friendEloLabel->setStyleSheet("font-size: 14px");
+    friendInfoWidgetLayout->addWidget(friendEloLabel);
+
     QString friendStatus = friends[friendIndex].online_status == 1 ? "Online" : "Offline";
     QLabel *friendStatusLabel = new QLabel(friendStatus);
     friendStatusLabel->setStyleSheet("font-size: 12px");
@@ -237,7 +272,7 @@ QWidget *setUpFriendInviteWidget(int friendIndex)
                         int friendOptionsWidgetHeight = friendWidgetCoord.y();
 
                         cout << friendOptionsWidgetWidth << " " << friendOptionsWidgetHeight << endl;
-                        QWidget *friendOptionsWidget = new QWidget(nullptr, Qt::Popup);
+                        QWidget *friendOptionsWidget = new QWidget(homeWindow, Qt::Popup);
                         friendOptionsWidget->setAttribute(Qt::WA_DeleteOnClose);
                         friendOptionsWidget->setStyleSheet("background-color: white; border: 1px solid black;");
                         friendOptionsWidget->setFixedWidth(friendColumnWidth);
@@ -332,7 +367,12 @@ void setUpHomeEvents()
                         settingWidget->show();
                         settingWidget->raise();
                     } });
-
+    QObject::connect(viewCareerBtn, &QPushButton::clicked, []()
+                     { cout << "view career button clicked" << endl; 
+                    bodyWidget->hide();
+                    homeLayout->removeWidget(bodyWidget);
+                    viewCareerBtn->setEnabled(false);
+                    homeLayout->addWidget(userCareerWidget = setUpUserCareerWidget(user)); });
     QObject::connect(logOutBtn, &QPushButton::clicked, []()
                      {
                     cout << "Log out button clicked" << endl;
@@ -416,6 +456,30 @@ void homeScreen(QWidget *window, User _user)
 
     homeLayout->addWidget(topWidget);
 
+    // Create user information widget
+
+    int accountInfoWidth = 200;
+    QWidget *accountInfoWidget = new QWidget();
+    accountInfoWidget->setStyleSheet("border: none;");
+    accountInfoWidget->setFixedSize(accountInfoWidth, topHeight);
+
+    QVBoxLayout *accountInfoLayout = new QVBoxLayout();
+    accountInfoLayout->setContentsMargins(0, 0, 0, 0);
+    accountInfoLayout->setSpacing(0);
+    accountInfoLayout->setAlignment(Qt::AlignTop);
+    accountInfoLayout->setAlignment(Qt::AlignRight);
+    accountInfoWidget->setLayout(accountInfoLayout);
+
+    QLabel *accountNameLabel = new QLabel(QString::fromStdString(user.username));
+    accountInfoLayout->addWidget(accountNameLabel);
+
+    cout << "User elo " << user.elo << endl;
+    QLabel *accountEloLabel = new QLabel(QString::number(user.elo) + " points");
+    accountInfoLayout->addWidget(accountEloLabel);
+    cout << "Account elo label " << accountEloLabel->text().toStdString() << endl;
+
+    topLayout->addWidget(accountInfoWidget);
+
     // 1.1.1. Create user icon
     accountLabelWidth = 60;
     accountLabel = new QPushButton();
@@ -429,7 +493,7 @@ void homeScreen(QWidget *window, User _user)
     settingWidgetWidth = screenWidth * 0.1;
     settingWidgetOptionHeight = 30;
 
-    settingWidget = new QWidget(nullptr, Qt::Popup);
+    settingWidget = new QWidget(homeWindow, Qt::Popup);
     settingWidget->setStyleSheet("background-color: #f5f5f5; border: 1px solid rgba(83, 83, 83, 1); border-radius: 0px; font-weight: bold;");
     settingWidget->move(window->width() - settingWidgetWidth - accountLabelWidth, topWidget->height() + 40);
     settingWidget->hide();
@@ -438,8 +502,14 @@ void homeScreen(QWidget *window, User _user)
     QVBoxLayout *settingLayout = new QVBoxLayout();
     settingLayout->setAlignment(Qt::AlignTop);
     settingLayout->setContentsMargins(0, 0, 0, 0);
+    settingLayout->setSpacing(0);
 
     settingWidget->setLayout(settingLayout);
+
+    // view career button
+    viewCareerBtn = new QPushButton("viewCareer");
+    viewCareerBtn->setFixedSize(settingWidgetWidth, settingWidgetOptionHeight);
+    settingLayout->addWidget(viewCareerBtn);
 
     // 1.1.1.1.1. Log out setting option
     logOutBtn = new QPushButton("Log Out");

@@ -9,6 +9,7 @@ using namespace std;
 
 void insertUser(string username, string password, string confirmPassword);
 int verifyUser(string username, string password);
-vector<User> getFriendsOfUser(int id);
-vector<User> getFriendRequestsOfUser(int id);
+vector<User> getFriendsOfUser(int userId);
+vector<User> getFriendRequestsOfUser(int userId);
+User getUser(int userId);
 #endif
